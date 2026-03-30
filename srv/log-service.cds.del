@@ -1,0 +1,8 @@
+service LogService {
+    action writeLog(
+        objectType : String,
+        objectId   : String,
+        operation  : String,
+        detail     : String
+    ) returns String;
+}

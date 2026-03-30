@@ -1,0 +1,182 @@
+_schema-version: 3.3.0
+ID: log-test
+description: A simple CAP project.
+version: 1.0.0-SNAPSHOT
+
+modules:
+- name: log-test-srv
+  type: java
+  path: srv
+  properties:
+    JBP_CONFIG_COMPONENTS: 'jres: ["com.sap.xs.java.buildpack.jre.SAPMachineJRE"]'
+    JBP_CONFIG_SAP_MACHINE_JRE: '{ version: 21.+ }'
+    SPRING_PROFILES_ACTIVE: cloud,sandbox
+  requires:
+  - name: log-test-auth
+  - name: log-test-db
+  - name: log-test-html5-app-runtime
+  provides:
+  - name: log-test-api
+    properties:
+      srv-url: ${default-url}
+  parameters:
+    buildpack: sap_java_buildpack_jakarta
+    health-check-http-endpoint: /actuator/health/readiness
+    health-check-type: http
+  build-parameters:
+    build-result: target/*-exec.jar
+    builder: custom
+    commands:
+    - mvn clean package -DskipTests=true --batch-mode
+
+- name: log-test-db-deployer
+  type: hdb
+  path: db
+  requires:
+  - name: log-test-db
+  - name: log-test-html5-app-runtime
+  parameters:
+    buildpack: nodejs_buildpack
+  build-parameters:
+    builder: custom
+    commands:
+    - npm run build
+
+- name: log-test-destination-content
+  type: com.sap.application.content
+  build-parameters:
+    no-source: true
+  requires:
+    - name: log-test-destination-service
+      parameters:
+        content-target: true
+    - name: log-test_html_repo_host
+      parameters:
+        service-key:
+          name: log-test_html_repo_host-key
+    - name: log-test-auth
+      parameters:
+        service-key:
+          name: log-test-auth-key  
+    - name: log-test-api
+    - name: srv-api-destination
+    - name: log-test-html5-app-runtime
+  parameters:
+    content:
+      instance:
+        destinations:
+          - Name: log-test_html_repo_host          
+            Authentication: OAuth2UserTokenExchange
+            ServiceInstanceName: log-test-html5-app-host-service
+            ServiceKeyName: log-test_html_repo_host-key
+            sap.cloud.service: log-test
+
+          - Name: log-test_auth
+            Authentication: OAuth2UserTokenExchange
+            ServiceInstanceName: log-test-auth
+            ServiceKeyName: log-test-auth-key
+            sap.cloud.service: log-test
+
+          - Name: log-test-api       
+            URL: ~{log-test-api/srv-url}
+            Authentication: 'OAuth2UserTokenExchange'  
+            HTML5.DynamicDestination: true    
+            ServiceInstanceName: log-test-auth        
+            ServiceKeyName: log-test-auth-key    
+            sap.cloud.service: log-test    
+        existing_destinations_policy: update
+
+- name: books
+  type: html5
+  path: app/books
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+      - npm install
+      - npm run build:cf
+      - npx bestzip books.zip dist/*
+    artifacts:                  
+      - books.zip
+    supported-platforms: []
+
+- name: log-test-app-content
+  type: com.sap.application.content
+  path: .
+  requires:
+    - name: log-test-html5-app-runtime 
+    - name: log-test_html_repo_host
+      parameters:
+        content-target: true
+  build-parameters:
+    build-result: resources
+    requires:
+      - name: books
+        artifacts:
+          - books.zip
+        target-path: resources/
+
+resources:
+- name: log-test-db
+  type: com.sap.xs.hdi-container
+  parameters:
+    service: hana
+    service-plan: hdi-shared
+
+- name: log-test-auth  
+  parameters:
+    config:
+      tenant-mode: dedicated
+      xsappname: log-test-${space}
+    path: ./xs-security.json
+    service: xsuaa    
+    service-name: log-test-auth
+    service-plan: application
+  type: org.cloudfoundry.managed-service
+  properties:
+    service-key:
+      name: log-test-auth-key
+
+- name: log-test-destination-service
+  type: org.cloudfoundry.managed-service
+  requires:
+    - name: log-test-api
+  parameters:
+    config:
+      HTML5Runtime_enabled: true
+      init_data:
+        instance:
+          destinations:
+          - Authentication: NoAuthentication
+            Name: ui5
+            ProxyType: Internet
+            Type: HTTP
+            URL: https://ui5.sap.com
+          existing_destinations_policy: update
+      version: 1.0.0
+    service: destination
+    service-name: log-test-destination-service
+    service-plan: lite
+
+- name: log-test_html_repo_host
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-plan: app-host
+    service-name: log-test-html5-app-host-service
+
+- name: log-test-html5-app-runtime
+  parameters:
+    service: html5-apps-repo
+    service-plan: app-runtime
+  type: org.cloudfoundry.managed-service
+
+- name: srv-api-destination
+  parameters:
+    service: destination
+    service-plan: lite
+  type: org.cloudfoundry.managed-service
+
+parameters:
+  deploy_mode: html5-repo
+  enable-parallel-deployments: true

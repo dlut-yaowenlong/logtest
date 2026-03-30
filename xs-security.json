@@ -1,0 +1,19 @@
+{
+ "scopes": [
+  {
+   "name": "$XSAPPNAME.FullAccess",
+   "description": "Full access to the application"
+  }
+ ],
+ "role-templates": [
+  {
+   "name": "Administrator",
+   "description": "Administrator role with full access",
+   "scope-references": [
+    "$XSAPPNAME.FullAccess"
+   ]
+  }
+ ],
+ "attributes": [],
+ "authorities-inheritance": false
+}
