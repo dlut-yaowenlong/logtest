@@ -71,6 +71,7 @@ annotate service.Books with @(
         stock,
         title,
     ],
+    
 );
 
 annotate service.Books with {
@@ -94,7 +95,13 @@ annotate service.Books with {
         Common.ValueListWithFixedValues : true,
     )
 };
-
+annotate service.Books with @(
+   Capabilities: {
+        InsertRestrictions.Insertable : true,
+        UpdateRestrictions.Updatable  : true,
+        DeleteRestrictions.Deletable  : true
+    }
+);
 annotate service.Books with {
     ID @Common.Label : 'ID'
 };

@@ -1,0 +1,61 @@
+package customer.log_test.handler;
+
+import com.sap.cds.services.handler.EventHandler;
+import com.sap.cds.services.handler.annotations.On;
+import com.sap.cds.services.handler.annotations.ServiceName;
+import org.springframework.stereotype.Component;
+import com.sap.cds.services.request.UserInfo;
+import cds.gen.catalogservice.CatalogService_;
+import java.util.HashMap;
+import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+
+@Component
+@ServiceName(CatalogService_.CDS_NAME)
+public class UserInfoHandler implements EventHandler {
+
+    /**
+     * CAP / Spring がリクエストコンテキストに応じたユーザー情報を注入する。
+     *
+     * この UserInfo には、現在のログインユーザーに関する情報が格納される。
+     * 例えば以下のような情報を取得可能：
+     * ・ユーザーID / ユーザー名
+     * ・追加属性（メールアドレスなど）
+     *
+     * つまり、処理実行時の認証済みユーザー情報をここから参照している。
+     */
+    @Autowired
+    private UserInfo userInfo;
+
+    @On(event = "getUserInfo")
+    public Map<String, Object> onGetUserInfo() {
+        System.out.println("getUserInfo called");
+
+        Map<String, Object> result = new HashMap<>();
+
+        // 注入された UserInfo オブジェクトの内容をログ出力
+        System.out.println("userInfo = " + userInfo);
+
+        /**
+         * getName() で現在ログイン中のユーザー名 / ユーザーID を取得する。
+         * 今回は userId と userName の両方に同じ値を設定している。
+         */
+        result.put("userId", userInfo.getId());
+        result.put("userName", userInfo.getName());
+
+        /**
+         * AdditionalAttributes から追加属性を取得する。
+         * 認証基盤やトークンの内容によっては email が格納されている場合がある。
+         *
+         * null の可能性があるため、存在チェックを行ってから取得する。
+         */
+        Object email = userInfo.getAdditionalAttributes() != null
+                ? userInfo.getAdditionalAttributes().get("email")
+                : null;
+
+        // email が存在する場合のみ文字列として設定し、存在しない場合は空文字を返す
+        result.put("email", email != null ? email.toString() : "");
+
+        return result;
+    }
+}
