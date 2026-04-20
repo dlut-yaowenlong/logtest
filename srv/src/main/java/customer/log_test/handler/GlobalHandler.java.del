@@ -1,0 +1,65 @@
+package customer.log_test.handler;
+
+import com.sap.cds.services.EventContext;
+import com.sap.cds.services.handler.EventHandler;
+import com.sap.cds.services.handler.annotations.After;
+import com.sap.cds.services.handler.annotations.Before;
+import com.sap.cds.services.handler.annotations.ServiceName;
+import customer.log_test.util.TraceUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+@Component
+@ServiceName("*")
+public class GlobalHandler implements EventHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalHandler.class);
+
+    @Before(event = "*", entity = "*")
+    public void beforeAll(EventContext ctx) {
+        // String traceId = TraceUtil.getTraceId();
+        // log.error(
+        //         ">>> REQUEST START traceId={} event={} target={} service={}",
+        //         traceId,
+        //         ctx.getEvent(),
+        //         ctx.getTarget(),
+        //         ctx.getService()
+        // );
+    }
+
+    @After(event = "*", entity = "*")
+    public void afterAll(EventContext ctx) {
+    //    String traceId = TraceUtil.getTraceId();
+
+    //     StringBuilder sb = new StringBuilder();
+    //     sb.append("\n===== EVENT CONTEXT DUMP =====\n");
+    //     sb.append("traceId=").append(traceId).append("\n");
+    //     sb.append("event=").append(ctx.getEvent()).append("\n");
+    //     sb.append("target=").append(ctx.getTarget()).append("\n");
+    //     sb.append("service=").append(ctx.getService()).append("\n");
+
+    //     if (ctx.getUserInfo() != null) {
+    //         sb.append("user=").append(ctx.getUserInfo().getName()).append("\n");
+    //         sb.append("tenant=").append(ctx.getUserInfo().getTenant()).append("\n");
+    //     }
+
+    //     sb.append("---- PARAMETERS ----\n");
+    //     for (String key : ctx.keySet()) {
+    //         try {
+    //             Object value = ctx.get(key);
+    //             sb.append(key).append(" = ").append(value).append("\n");
+    //         } catch (Exception e) {
+    //             sb.append(key).append(" = [ERROR: ").append(e.getMessage()).append("]\n");
+    //         }
+    //     }
+
+    //     if (ctx.getMessages() != null) {
+    //         sb.append("messages=").append(ctx.getMessages()).append("\n");
+    //     }
+
+    //     sb.append("===== END =====\n");
+
+    //     log.error(sb.toString());
+    }
+}

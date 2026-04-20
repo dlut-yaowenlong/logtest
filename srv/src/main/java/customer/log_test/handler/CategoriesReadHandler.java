@@ -1,29 +1,35 @@
 package customer.log_test.handler;
 
+import com.sap.cds.Result;
 import com.sap.cds.services.cds.CdsReadEventContext;
 import com.sap.cds.services.handler.EventHandler;
-
 import com.sap.cds.services.handler.annotations.After;
 import com.sap.cds.services.handler.annotations.ServiceName;
-
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import com.sap.cds.services.request.UserInfo;
 import cds.gen.catalogservice.CatalogService_;
 import customer.log_test.util.LogUtil;
-import com.sap.cds.Result;
+import customer.log_test.util.TraceUtil;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Component
 @ServiceName(CatalogService_.CDS_NAME)
 public class CategoriesReadHandler implements EventHandler {
+
     @Autowired
     private UserInfo userInfo;
 
     @After(event = "READ", entity = "CatalogService.Categories")
     public void onReadCategories(CdsReadEventContext context, Result result) {
+        String traceId = TraceUtil.getTraceId();
+        String threadName = Thread.currentThread().getName();
+        String className = this.getClass().getSimpleName();
+
         List<Map> categories = result.listOf(Map.class);
 
         String message;
@@ -35,7 +41,7 @@ public class CategoriesReadHandler implements EventHandler {
 
             for (var row : categories) {
                 count++;
-                sb.append(row.toString()).append(" ; ");
+                sb.append(row).append(" ; ");
             }
 
             message = "Categories read count=" + count + " , data=" + sb;
@@ -44,6 +50,10 @@ public class CategoriesReadHandler implements EventHandler {
         LogUtil.log(
                 userInfo.getName(),
                 "log test page",
+                className,
+                traceId,
+                threadName,
+                "CT_B_I00001",
                 "INFO",
                 message
         );

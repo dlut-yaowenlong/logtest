@@ -9,21 +9,27 @@ import com.sap.cds.services.request.UserInfo;
 import cds.gen.catalogservice.Books_;
 import cds.gen.catalogservice.CatalogService_;
 import customer.log_test.util.LogUtil;
+import customer.log_test.util.TraceUtil;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
+import java.util.UUID;
 
 @Component
 @ServiceName(CatalogService_.CDS_NAME)
-public class BooksDeleteHandler implements EventHandler  {
+public class BooksDeleteHandler implements EventHandler {
 
     @Autowired
     private UserInfo userInfo;
 
     @Before(event = "DELETE", entity = Books_.CDS_NAME)
     public void beforeDeleteBooks(CdsDeleteEventContext context) {
-         try {
+        String traceId = TraceUtil.getTraceId();
+        String threadName = Thread.currentThread().getName();
+        String className = this.getClass().getSimpleName();
+        try {
             CqnAnalyzer analyzer = CqnAnalyzer.create(context.getModel());
             var analysis = analyzer.analyze(context.getCqn());
 
@@ -35,16 +41,22 @@ public class BooksDeleteHandler implements EventHandler  {
             LogUtil.log(
                     userInfo.getName(),
                     "log test page",
+                    className,
+                    traceId,
+                    threadName,
+                    "BK_B_I00001",
                     "INFO",
-                    message
-            );
+                    message);
         } catch (Exception e) {
             LogUtil.log(
                     userInfo.getName(),
                     "log test page",
+                    className,
+                    traceId,
+                    threadName,
+                    "BK_B_E00001",
                     "ERROR",
-                    "DELETE key parse failed"
-            );
+                    "DELETE key parse failed");
         }
     }
 }

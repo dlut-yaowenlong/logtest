@@ -1,0 +1,99 @@
+package customer.log_test.error;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import customer.log_test.util.LogUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.ContentCachingResponseWrapper;
+
+import com.sap.cds.services.request.UserInfo;
+
+@Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class GlobalErrorCaptureFilter extends OncePerRequestFilter {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalErrorCaptureFilter.class);
+
+    @Override
+    protected boolean shouldNotFilterErrorDispatch() {
+        return false;
+    }
+
+    @Override
+    protected boolean shouldNotFilterAsyncDispatch() {
+        return false;
+    }
+
+    @Autowired
+    private UserInfo userInfo;
+
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
+
+        System.out.println("doFilterInternal start");
+        String uri = request.getRequestURI();
+
+        if (!uri.contains("/odata/v4/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        ContentCachingResponseWrapper wrappedResponse = new ContentCachingResponseWrapper(response);
+        try {
+            filterChain.doFilter(request, response);
+            byte[] buf = wrappedResponse.getContentAsByteArray();
+
+            log.error("END method={} uri={} status={} responseContentType={} cachedBodySize={}",
+                    request.getMethod(),
+                    request.getRequestURI(),
+                    wrappedResponse.getStatus(),
+                    wrappedResponse.getContentType(),
+                    buf == null ? -1 : buf.length);
+
+            if (buf != null && buf.length > 0) {
+                String responseBody = new String(buf, StandardCharsets.UTF_8);
+                log.error("RESPONSE BODY uri={} body={}", uri, responseBody);
+            } else {
+                log.error("RESPONSE BODY uri={} body is empty", uri);
+            }
+
+            for (String headerName : response.getHeaderNames()) {
+                System.out.println(headerName + " = " + response.getHeader(headerName));
+            }
+
+            if (response.getStatus() >= 500) {
+                Object exObj = request.getAttribute("jakarta.servlet.error.exception");
+                if (exObj instanceof Throwable ex) {
+                    LogUtil.log(userInfo.getName(),
+                            "log test page",
+                            "INFO",
+                            ex.toString());
+                } else {
+                    log.error("Request ended with status {} but no exception object found. path={}",
+                            response.getStatus(), request.getRequestURI());
+                }
+            }
+
+        } catch (Exception ex) {
+            System.out.println("Unhandled exception caught in filter  " + ex);
+            LogUtil.log(userInfo.getName(),
+                    "log test page",
+                    "INFO",
+                    ex.toString());
+            throw ex;
+        }
+    }
+}
