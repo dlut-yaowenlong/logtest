@@ -4,6 +4,7 @@ import com.sap.cds.Result;
 import com.sap.cds.services.cds.CdsReadEventContext;
 import com.sap.cds.services.handler.EventHandler;
 import com.sap.cds.services.handler.annotations.After;
+import com.sap.cds.services.handler.annotations.Before;
 import com.sap.cds.services.handler.annotations.ServiceName;
 import com.sap.cds.services.request.UserInfo;
 import cds.gen.catalogservice.CatalogService_;
@@ -23,6 +24,23 @@ public class CategoriesReadHandler implements EventHandler {
 
     @Autowired
     private UserInfo userInfo;
+
+    @Before(event = "READ", entity = "CatalogService.Categories")
+    public void beforeReadCategories(CdsReadEventContext context) {
+        String traceId = TraceUtil.getTraceId();
+        String threadName = Thread.currentThread().getName();
+        String className = this.getClass().getSimpleName();
+
+        LogUtil.log(
+                userInfo != null ? userInfo.getName() : "system",
+                "log test page",
+                className,
+                traceId,
+                threadName,
+                "CT_B_I00000",
+                "INFO",
+                "READ Categories start | cqn=" + context.getCqn());
+    }
 
     @After(event = "READ", entity = "CatalogService.Categories")
     public void onReadCategories(CdsReadEventContext context, Result result) {
@@ -55,7 +73,6 @@ public class CategoriesReadHandler implements EventHandler {
                 threadName,
                 "CT_B_I00001",
                 "INFO",
-                message
-        );
+                message);
     }
 }
