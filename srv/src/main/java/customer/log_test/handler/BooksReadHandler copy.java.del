@@ -1,6 +1,7 @@
 package customer.log_test.handler;
 
 import com.sap.cds.Result;
+import com.sap.cds.services.EventContext;
 import com.sap.cds.services.cds.CdsReadEventContext;
 import com.sap.cds.services.handler.EventHandler;
 import com.sap.cds.services.handler.annotations.After;
@@ -34,8 +35,8 @@ public class BooksReadHandler implements EventHandler {
         this.db = db;
     }
 
-    @After(event = "READ", entity = Books_.CDS_NAME)
-    public void onAfterReadBooks(CdsReadEventContext context, Result result) {
+    @After(event = "*", entity = Books_.CDS_NAME)
+    public void onAfterReadBooks(EventContext context, Result result) {
         String traceId = TraceUtil.getTraceId();
         String threadName = Thread.currentThread().getName();
         String className = this.getClass().getSimpleName();
@@ -60,7 +61,7 @@ public class BooksReadHandler implements EventHandler {
                 threadName,
                 "BK_B_I00002",
                 "INFO",
-                sb.toString());
+                "Books event start | event=" + context.getEvent() + " | target=" + context.getTarget());
     }
 
     // ===== BEFORE =====
