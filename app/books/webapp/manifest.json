@@ -143,9 +143,9 @@
                 "@com.sap.vocabularies.UI.v1.LineItem": {
                   "tableSettings": {
                     "type": "ResponsiveTable",
-      "creationMode": {
-        "name": "NewPage"
-      }
+                    "creationMode": {
+                      "name": "NewPage"
+                    }
                   }
                 }
               }
@@ -170,6 +170,9 @@
         "sap.ui.controllerExtensions": {
           "sap.fe.templates.ListReport.ListReportController": {
             "controllerName": "books.ext.controller.ListReportExtension"
+          },
+          "sap.fe.templates.ObjectPage.ObjectPageController": {
+            "controllerName": "books.ext.controller.ObjectExtension"
           }
         }
       }

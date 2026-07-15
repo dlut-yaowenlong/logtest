@@ -11,13 +11,27 @@ public class TraceUtil {
     }
 
     public static String getTraceId() {
+
+
+        String traceId = MDC.get("traceId");
+        if (traceId != null && !traceId.isBlank()) {
+            return traceId;
+        }
+
         RequestAttributes attrs = RequestContextHolder.getRequestAttributes();
         if (attrs != null) {
-            Object value = attrs.getAttribute(TraceIdFilter.TRACE_ID_ATTR, RequestAttributes.SCOPE_REQUEST);
-            if (value instanceof String s && !s.isBlank()) {
-                return s;
+            Object value = attrs.getAttribute(
+                    TraceIdFilter.TRACE_ID_ATTR,
+                    RequestAttributes.SCOPE_REQUEST
+            );
+
+            if (value instanceof String requestTraceId
+                    && !requestTraceId.isBlank()) {
+                return requestTraceId;
             }
         }
-        return MDC.get("traceId");
+
+     
+        return null;
     }
 }

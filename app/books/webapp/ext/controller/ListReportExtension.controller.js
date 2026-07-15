@@ -6,6 +6,12 @@ sap.ui.define([
 	return ControllerExtension.extend("books.ext.controller.ListReportExtension", {
 		override: {
 			onInit: async function () {
+				const oModel = this.base.getAppComponent().getModel();
+
+				oModel.changeHttpHeaders({
+					"X-Page-Type": "ListReport",
+					"X-Screen-Name": "bookslistreport"
+				});
 				// 画面初期化ログ出力
 				setTimeout(() => {
 					this._logScreenInit();
@@ -38,7 +44,7 @@ sap.ui.define([
 
 				//　例外エラーハンドラ定義
 				const oAppComponent = this.base.getAppComponent();
-				const oModel = oAppComponent && oAppComponent.getModel();
+				// const oModel = oAppComponent && oAppComponent.getModel();
 				console.log("final oModel =", oModel);
 
 				// UI5输入エラー

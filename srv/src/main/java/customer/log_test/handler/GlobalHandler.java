@@ -10,6 +10,7 @@ import com.sap.cds.services.request.UserInfo;
 
 import cds.gen.catalogservice.CatalogService_;
 import customer.log_test.util.LogUtil;
+import customer.log_test.util.ScreenUtil;
 import customer.log_test.util.TraceUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -24,17 +25,34 @@ public class GlobalHandler implements EventHandler {
     @Autowired
     private UserInfo userInfo;
 
+    private boolean isDraftInternalEvent(EventContext context) {
+        String event = context.getEvent();
+
+        return "DRAFT_READ".equals(event)
+                || "ACTIVE_READ".equals(event)
+                || "DRAFT_CREATE".equals(event)
+                // || "DRAFT_PATCH".equals(event) //修正項目確認
+                || "DRAFT_CANCEL".equals(event)
+                || "DRAFT_GC".equals(event)
+                || "draftEdit".equals(event)
+                || "draftPrepare".equals(event)
+                || "draftActivate".equals(event);
+    }
+
     @Before(event = "*", entity = "*")
     public void beforeAll(EventContext context) {
+        if (isDraftInternalEvent(context)) {
+            return;
+        }
         String traceId = TraceUtil.getTraceId();
         String threadName = Thread.currentThread().getName();
         String className = this.getClass().getSimpleName();
-
+        String screenName = ScreenUtil.getScreenName();
         StringBuilder message = new StringBuilder();
         message.append("Event start")
-               .append(" | event=").append(context.getEvent())
-               .append(" | target=").append(context.getTarget())
-               .append(" | service=").append(context.getService());
+                .append(" | event=").append(context.getEvent())
+                .append(" | target=").append(context.getTarget())
+                .append(" | service=").append(context.getService());
 
         Object cqn = context.get("cqn");
         if (cqn != null) {
@@ -48,27 +66,29 @@ public class GlobalHandler implements EventHandler {
 
         LogUtil.log(
                 userInfo != null ? userInfo.getName() : "system",
-                "global handler",
+                screenName,
                 className,
                 traceId,
                 threadName,
                 "GL_B_I00001",
                 "INFO",
-                message.toString()
-        );
+                message.toString());
     }
 
     @After(event = "*", entity = "*")
     public void afterAll(EventContext context) {
+        if (isDraftInternalEvent(context)) {
+            return;
+        }
         String traceId = TraceUtil.getTraceId();
         String threadName = Thread.currentThread().getName();
         String className = this.getClass().getSimpleName();
-
+String screenName = ScreenUtil.getScreenName();
         StringBuilder message = new StringBuilder();
         message.append("Event end")
-               .append(" | event=").append(context.getEvent())
-               .append(" | target=").append(context.getTarget())
-               .append(" | service=").append(context.getService());
+                .append(" | event=").append(context.getEvent())
+                .append(" | target=").append(context.getTarget())
+                .append(" | service=").append(context.getService());
 
         Object resultObj = context.get("result");
         if (resultObj != null) {
@@ -95,13 +115,12 @@ public class GlobalHandler implements EventHandler {
 
         LogUtil.log(
                 userInfo != null ? userInfo.getName() : "system",
-                "global handler",
+                screenName,
                 className,
                 traceId,
                 threadName,
                 "GL_B_I00002",
                 "INFO",
-                message.toString()
-        );
+                message.toString());
     }
 }
