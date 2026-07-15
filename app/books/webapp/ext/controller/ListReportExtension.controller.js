@@ -6,12 +6,13 @@ sap.ui.define([
 	return ControllerExtension.extend("books.ext.controller.ListReportExtension", {
 		override: {
 			onInit: async function () {
+				const oRouter = this.base.getAppComponent().getRouter();
+
+				this._onRouteMatchedBound = this._onRouteMatched.bind(this);
+				oRouter.attachRouteMatched(this._onRouteMatchedBound);
 				const oModel = this.base.getAppComponent().getModel();
 
-				oModel.changeHttpHeaders({
-					"X-Page-Type": "ListReport",
-					"X-Screen-Name": "bookslistreport"
-				});
+				
 				// 画面初期化ログ出力
 				setTimeout(() => {
 					this._logScreenInit();
@@ -77,6 +78,23 @@ sap.ui.define([
 				if (this._onUnhandledRejectionBound) {
 					window.removeEventListener("unhandledrejection", this._onUnhandledRejectionBound);
 				}
+			}
+		},
+		_onRouteMatched: function (oEvent) {
+			const sRouteName = oEvent.getParameter("name");
+			const oModel = this.base.getAppComponent().getModel();
+
+			console.log("route matched:", sRouteName);
+
+			if (!oModel || typeof oModel.changeHttpHeaders !== "function") {
+				return;
+			}
+
+			if (sRouteName && sRouteName.toLowerCase().includes("list")) {
+				oModel.changeHttpHeaders({
+					"X-Page-Type": "ListReport",
+					"X-Screen-Name": "bookslistreport"
+				});
 			}
 		},
 		_onBeforeExport: async function (oEvent) {

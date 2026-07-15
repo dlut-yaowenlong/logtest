@@ -6,10 +6,10 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 public final class ScreenUtil {
 
-    private static final String REFERER_HEADER = "Referer";
+    
     private static final String UNKNOWN_SCREEN = "unknown";
-    private static final String BOOKS_SCREEN = "書籍画面";
-
+    private static final String BOOKS_LIST_SCREEN = "書籍一覧画面";
+    private static final String BOOKS_DETAIL_SCREEN = "書籍詳細画面";
     private ScreenUtil() {
     }
 
@@ -20,15 +20,13 @@ public final class ScreenUtil {
             return UNKNOWN_SCREEN;
         }
 
-        String referer = request.getHeader(REFERER_HEADER);
         String name = request.getHeader("X-Screen-Name");
-        System.out.println("ScreenUtil.getScreenName() referer=" + referer + ", name=" + name);
-        if (referer == null || referer.isBlank()) {
-            return UNKNOWN_SCREEN;
+        System.out.println("ScreenUtil.getScreenName() name=" + name);
+        if ("bookslistreport".equals(name)) {
+            return BOOKS_LIST_SCREEN;
         }
-
-        if (referer.toLowerCase().contains("books")) {
-            return BOOKS_SCREEN;
+        if ("booksobjectpage".equals(name)) {
+            return BOOKS_DETAIL_SCREEN;
         }
 
         return UNKNOWN_SCREEN;
