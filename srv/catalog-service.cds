@@ -6,8 +6,12 @@ service CatalogService {
     // action getUserInfo()            returns UserInfo;
 
     action onInit(pageType: String,
-                    pageName: String,
-                    detail: String) returns String;
+                  pageName: String,
+                  detail: String) returns String;
+
+    action beforeExport(pageType: String,
+                  pageName: String,
+                  detail: String) returns String;
 }
 
 // type UserInfo {
@@ -15,3 +19,5 @@ service CatalogService {
 //     userName : String;
 //     email    : String;
 // }
+annotate CatalogService.Books
+    with @odata.draft.enabled: true;

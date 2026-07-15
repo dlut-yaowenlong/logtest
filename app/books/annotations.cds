@@ -1,69 +1,93 @@
 using CatalogService as service from '../../srv/catalog-service';
+
+annotate service.Books with {
+    category @(
+        Common.Label                   : 'Category',
+        Common.Text                    : category.name,
+        Common.TextArrangement         : #TextOnly,
+        Common.ValueList               : {
+            $Type         : 'Common.ValueListType',
+            CollectionPath: 'Categories',
+            Parameters    : [
+                {
+                    $Type            : 'Common.ValueListParameterInOut',
+                    LocalDataProperty: category_code,
+                    ValueListProperty: 'code'
+                },
+                {
+                    $Type            : 'Common.ValueListParameterDisplayOnly',
+                    ValueListProperty: 'name'
+                }
+            ]
+        },
+        Common.ValueListWithFixedValues: true
+    )
+};
+
 annotate service.Books with @(
-    UI.FieldGroup #GeneratedGroup : {
-        $Type : 'UI.FieldGroupType',
+    UI.FieldGroup #GeneratedGroup: {
+        $Type: 'UI.FieldGroupType',
         Data : [
             {
-                $Type : 'UI.DataField',
-                Label : 'title',
-                Value : title,
+                $Type: 'UI.DataField',
+                Label: 'title',
+                Value: title,
             },
             {
-                $Type : 'UI.DataField',
-                Label : 'author',
-                Value : author,
+                $Type: 'UI.DataField',
+                Label: 'author',
+                Value: author,
             },
             {
-                $Type : 'UI.DataField',
-                Label : 'stock',
-                Value : stock,
+                $Type: 'UI.DataField',
+                Label: 'stock',
+                Value: stock,
             },
             {
-                $Type : 'UI.DataField',
-                Label : 'price',
-                Value : price,
+                $Type: 'UI.DataField',
+                Label: 'price',
+                Value: price,
             },
         ],
     },
-    UI.Facets : [
+    UI.Facets                    : [{
+        $Type : 'UI.ReferenceFacet',
+        ID    : 'GeneratedFacet1',
+        Label : 'General Information',
+        Target: '@UI.FieldGroup#GeneratedGroup',
+    }, ],
+    UI.LineItem                  : [
         {
-            $Type : 'UI.ReferenceFacet',
-            ID : 'GeneratedFacet1',
-            Label : 'General Information',
-            Target : '@UI.FieldGroup#GeneratedGroup',
+            $Type: 'UI.DataField',
+            Label: 'title',
+            Value: title,
+        },
+        {
+            $Type: 'UI.DataField',
+            Label: 'author',
+            Value: author,
+        },
+        {
+            $Type: 'UI.DataField',
+            Label: 'stock',
+            Value: stock,
+        },
+        {
+            $Type: 'UI.DataField',
+            Label: 'price',
+            Value: price,
+        },
+        {
+            $Type: 'UI.DataField',
+            Label: 'Category',
+            Value: category_code,
+        },
+        {
+            $Type: 'UI.DataField',
+            Value: ID,
         },
     ],
-    UI.LineItem : [
-        {
-            $Type : 'UI.DataField',
-            Label : 'title',
-            Value : title,
-        },
-        {
-            $Type : 'UI.DataField',
-            Label : 'author',
-            Value : author,
-        },
-        {
-            $Type : 'UI.DataField',
-            Label : 'stock',
-            Value : stock,
-        },
-        {
-            $Type : 'UI.DataField',
-            Label : 'price',
-            Value : price,
-        },
-        {
-            $Type : 'UI.DataField',
-            Value : categoryCode,
-        },
-        {
-            $Type : 'UI.DataField',
-            Value : ID,
-        },
-    ],
-    UI.SelectionFields : [
+    UI.SelectionFields           : [
         author,
         categoryCode,
         ID,
@@ -71,50 +95,47 @@ annotate service.Books with @(
         stock,
         title,
     ],
-    
+
 );
 
 annotate service.Books with {
-    author @Common.Label : 'author'
+    author @Common.Label: 'author'
 };
 
 annotate service.Books with {
     categoryCode @(
-        Common.Label : 'categoryCode',
-        Common.ValueList : {
-            $Type : 'Common.ValueListType',
-            CollectionPath : 'Categories',
-            Parameters : [
-                {
-                    $Type : 'Common.ValueListParameterInOut',
-                    LocalDataProperty : categoryCode,
-                    ValueListProperty : 'code',
-                },
-            ],
+        Common.Label                   : 'categoryCode',
+        Common.ValueList               : {
+            $Type         : 'Common.ValueListType',
+            CollectionPath: 'Categories',
+            Parameters    : [{
+                $Type            : 'Common.ValueListParameterInOut',
+                LocalDataProperty: categoryCode,
+                ValueListProperty: 'code',
+            }, ],
         },
-        Common.ValueListWithFixedValues : true,
+        Common.ValueListWithFixedValues: true,
     )
 };
-annotate service.Books with @(
-   Capabilities: {
-        InsertRestrictions.Insertable : true,
-        UpdateRestrictions.Updatable  : true,
-        DeleteRestrictions.Deletable  : true
-    }
-);
+
+annotate service.Books with @(Capabilities: {
+    InsertRestrictions.Insertable: true,
+    UpdateRestrictions.Updatable : true,
+    DeleteRestrictions.Deletable : true
+});
+
 annotate service.Books with {
-    ID @Common.Label : 'ID'
+    ID @Common.Label: 'ID'
 };
 
 annotate service.Books with {
-    price @Common.Label : 'price'
+    price @Common.Label: 'price'
 };
 
 annotate service.Books with {
-    stock @Common.Label : 'stock'
+    stock @Common.Label: 'stock'
 };
 
 annotate service.Books with {
-    title @Common.Label : 'title'
+    title @Common.Label: 'title'
 };
-

@@ -1,37 +1,51 @@
 sap.ui.define([
 	"sap/ui/core/mvc/ControllerExtension"
-], function (ControllerExtension) {
+], async function (ControllerExtension) {
 	"use strict";
 
 	return ControllerExtension.extend("books.ext.controller.ListReportExtension", {
 		override: {
-			onInit: function () {
+			onInit: async function () {
 				// 画面初期化ログ出力
 				setTimeout(() => {
 					this._logScreenInit();
 				}, 0);
 
+				// Export動作
+				const controller = this.getView().getController();
+				let oSmartTable = controller._getTable();
+				if (!oSmartTable) {
+					for (let i = 0; i < 100; i++) {
+						await new Promise(r => setTimeout(r, 100));
+						oSmartTable = controller._getTable();
+						if (oSmartTable) {
+							break;
+						}
+					}
+				}
+
+				if (!oSmartTable) {
+					console.error("SmartTable not found");
+					return;
+				}
+
+				if (typeof oSmartTable.attachBeforeExport === "function") {
+					oSmartTable.attachBeforeExport(this._onBeforeExport, this);
+					console.log("beforeExport attached");
+				} else {
+					console.warn("attachBeforeExport is not available on this table instance");
+				}
+
 				//　例外エラーハンドラ定義
 				const oAppComponent = this.base.getAppComponent();
 				const oModel = oAppComponent && oAppComponent.getModel();
- console.log("final oModel =", oModel);
-				// if (oModel) {
-				// 	// OData请求失败
-				// 	if (oModel.attachRequestFailed) {
-				// 		oModel.attachRequestFailed(this._onRequestFailed, this);
-				// 	}
+				console.log("final oModel =", oModel);
 
-				// 	// metadata加载失败
-				// 	if (oModel.attachMetadataFailed) {
-				// 		oModel.attachMetadataFailed(this._onMetadataFailed, this);
-				// 	}
-				// }
-
-				// UI5输入解析/校验错误
+				// UI5输入エラー
 				sap.ui.getCore().attachParseError(this._onParseError, this);
 				sap.ui.getCore().attachValidationError(this._onValidationError, this);
 
-				// JS全局未捕获异常
+				// グローバルエラー
 				window.addEventListener("error", this._onWindowErrorBound = this._onWindowError.bind(this));
 				window.addEventListener("unhandledrejection", this._onUnhandledRejectionBound = this._onUnhandledRejection.bind(this));
 			},
@@ -59,7 +73,59 @@ sap.ui.define([
 				}
 			}
 		},
+		_onBeforeExport: async function (oEvent) {
+			console.log("beforeExport", oEvent);
 
+			const oView = this.base.getView();
+			const oModel = oView && oView.getModel();
+
+			if (!oModel) {
+				console.error("OData model not found");
+				return;
+			}
+
+			try {
+				const sScreenName = "log test page";
+
+				// beforeExportイベントからExcel出力情報を取得
+				const oExportSettings = oEvent.getParameter("exportSettings") || {};
+
+				const sDetail = JSON.stringify({
+					logLevel: "info",
+					screenName: sScreenName,
+					message: "Excel export executed",
+					fileName: oExportSettings.fileName || "",
+					dataSource: oExportSettings.dataSource || {},
+					columnCount: Array.isArray(oExportSettings.workbook?.columns)
+						? oExportSettings.workbook.columns.length
+						: 0,
+					pageUrl: window.location.href
+				});
+
+				const vLogResult = await this._beforeExport(oModel, {
+					pageType: "screen",
+					pageName: sScreenName,
+					detail: sDetail
+				});
+
+				console.log("beforeExport log result:", vLogResult);
+			} catch (e) {
+				console.error("beforeExport log request failed:", e);
+			}
+		},
+
+		_beforeExport: async function (oModel, mParams) {
+			const oActionBinding = oModel.bindContext("/beforeExport(...)");
+
+			oActionBinding.setParameter("pageType", mParams.pageType);
+			oActionBinding.setParameter("pageName", mParams.pageName);
+			oActionBinding.setParameter("detail", mParams.detail);
+
+			await oActionBinding.execute();
+
+			const oContext = oActionBinding.getBoundContext();
+			return oContext ? oContext.getObject() : null;
+		},
 		// 画面初期化時のログ出力
 		_logScreenInit: async function () {
 			const oView = this.base.getView();

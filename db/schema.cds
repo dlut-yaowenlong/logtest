@@ -4,7 +4,7 @@ entity Books {
     key ID       : UUID;
     title        : String(100);
     author       : String(100);
-    categoryCode : String(10);
+    category : Association to Categories;
     stock        : Integer;
     price        : Decimal(9,2);
 }
